@@ -2,7 +2,6 @@ package config
 
 import (
 	"encoding/json"
-	"fmt"
 	"log"
 	"os"
 	"os/signal"
@@ -103,8 +102,16 @@ func (c *Config) Get(name string) (interface{}, bool) {
 	return cfg, ok
 }
 
+func (c *Config) MustGet(name string) interface{} {
+	return c.current[name]
+}
+
 func Get(name string) (interface{}, bool) {
 	return globalConfig.Get(name)
+}
+
+func MustGet(name string) interface{} {
+	return globalConfig.MustGet(name)
 }
 
 type reconfigurableCfg struct {
@@ -132,13 +139,15 @@ func (c *Config) register(name string, defaults interface{}, r Reconfigurable) {
 	if _, found := c.sections[name]; !found {
 		c.sections[name] = &section{
 			defaults: reflect.New(v.Type()),
-			current:  defaults,
 			onchange: []Reconfigurable{},
 		}
-		c.current[name] = defaults
 	}
 	if defaults != nil {
 		addDefaults(c.sections[name].defaults, v)
+		if c.sections[name].current == nil {
+			c.sections[name].current = defaults
+			c.current[name] = defaults
+		}
 	}
 	if r != nil {
 		c.sections[name].onchange = append(c.sections[name].onchange, r)
@@ -165,7 +174,6 @@ func (c *Config) load() error {
 func (s *section) change() {
 	sig, err := json.Marshal(s.current)
 	if err != nil || string(sig) != s.signature {
-		fmt.Printf("changed %#v\n", s.current)
 		for _, r := range s.onchange {
 			r.Reconfigure(s.current)
 		}
