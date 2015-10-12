@@ -1,6 +1,9 @@
 # config
 
-Autonomous configuration for golang packages with hot reload on signals
+Autonomous configuration for golang packages with hot reload.
+
+* Each package has its own configuration, neither `main()` nor any other part of your application has the knowledge of the package configuration. 
+* Config can be dynamically updated when the application receives a signal.
 
 ## Usage
 
@@ -12,8 +15,10 @@ config.ReloadOn(syscall.SIGHUP)
 Package config :
 
 ```go
+package mypackage
+
 type PkgConf struct {
-	Value string
+	Value string `ini:"value"`
 }
 
 func (c *PkgConf) Changed() {
@@ -24,20 +29,22 @@ var (
 	pkfCong = PkgConf{
 		Value: "default value",
 	}
-	_ = config.Register("section name", &pkgConf)
+	_ = config.Register("section_name", &pkgConf)
 )
 ```
 
 Instance config :
 
 ```go
+package mypackage
+
 type PkgConf struct {
-	Value string
+	Value string `ini:"value"`
 }
 
 var (
 	// Set defaults
-	_ = config.Register("section name", &PkgConf{
+	_ = config.Register("section_name", &PkgConf{
 		Value: "default value",
 	})
 )
@@ -46,15 +53,25 @@ type PkgClass struct {}
 
 func New() *PkgClass {
 	n := &PkgClass{}
-	config.Reconfigure("section name", n)
+	// This will trigger a n.Reconfigure() call with the current config
+	config.Reconfigure("section_name", n)
 	return n
 }
 
 func (c *PkgClass) Reconfigure(c interface{}) {
-	if cfg, ok := c.(PkgConf); ok {
+	if cfg, ok := c.(*PkgConf); ok {
 		// Do something
 	}
 }
+```
+
+_config will cleanly Lock/Unlock your structs provided they implement `sync.Locker`_
+
+Config file:
+
+```ini
+[section_name]
+value=foobar
 ```
 
 ## Config file formats
