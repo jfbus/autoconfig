@@ -112,14 +112,16 @@ type Config struct {
 	loader   Loader
 }
 
-// UpdateableConfig defines the interface a config will need to implement
-// in order to be notified of changes.
+// UpdatableConfig defines the interface updateable config need to implement.
+// Each time the config is reloaded and the corresponding config section has changed,
+// the Changed function will be called.
 type UpdatableConfig interface {
 	Changed()
 }
 
-// Reconfigurable defines the interface an object will need to implement
-// in order to be notified of changes.
+// Reconfigurable defines the interface updateable instances need to implement.
+// Each time the config is reloaded and the corresponding config section has changed,
+// the Reconfigure function will be called for all instances.
 type Reconfigurable interface {
 	Reconfigure(interface{})
 }
@@ -141,18 +143,18 @@ func (c *Config) Load() error {
 	return c.load()
 }
 
-// Load loads the default config
+// Load defines the loader for the default config, and loads the config file.
 func Load(l Loader) error {
 	globalConfig.loader = l
 	return globalConfig.Load()
 }
 
-// Reload reloads a config
+// Reload reloads the config file
 func (c *Config) Reload() error {
 	return globalConfig.Load()
 }
 
-// Reload reloads the default config
+// Reload reloads the config file for the default config
 func Reload() error {
 	return globalConfig.Reload()
 }
@@ -175,6 +177,8 @@ func ReloadOn(signals ...os.Signal) {
 
 // Register registers a config structure for a config file section. The values passed will be used as
 // defaults in the future.
+// Defaults will be remembered : if a variable is defined, and then unset, it will be reset to the default value.
+// If s implements UpdateableConfig, s.Changed() will be called when the config is reloaded and has changed.
 func (c *Config) Register(name string, s interface{}) bool {
 	if uc, ok := s.(UpdatableConfig); ok {
 		c.register(name, s, &reconfigurableCfg{uc})
@@ -186,11 +190,17 @@ func (c *Config) Register(name string, s interface{}) bool {
 
 // Register registers a config structure for a config file section. The values passed will be used as
 // defaults in the future.
+// Defaults will be remembered : if a variable is defined, and then unset, it will be reset to the default value.
+// If s implements UpdateableConfig, s.Changed() will be called when the config is reloaded and has changed.
+//
+// 	var (
+// 		_ = config.Register("section_name", &PkgConfig{Value: "default"})
+// 	)
 func Register(name string, s interface{}) bool {
 	return globalConfig.Register(name, s)
 }
 
-// Register registers an instance to be reconfigured when a section config changes.
+// Reconfigure registers an instance. The config section must have been registered before using Register
 func (c *Config) Reconfigure(name string, r Reconfigurable) bool {
 	c.register(name, nil, r)
 	if cfg, ok := c.Get(name); ok {
@@ -199,7 +209,13 @@ func (c *Config) Reconfigure(name string, r Reconfigurable) bool {
 	return true
 }
 
-// Register registers an instance to be reconfigured when a section config changes.
+// Reconfigure registers an instance to the default config. The config section must have been registered before using Register
+//
+// 	func New() *PkgClass {
+// 		c := &PkgClass{}
+// 		config.Reconfigure("section_name", c)
+// 		return c
+// 	}
 func Reconfigure(name string, r Reconfigurable) bool {
 	return globalConfig.Reconfigure(name, r)
 }
@@ -210,17 +226,17 @@ func (c *Config) Get(name string) (interface{}, bool) {
 	return cfg, ok
 }
 
-// MustGet returns the configuration for a section.
-func (c *Config) MustGet(name string) interface{} {
-	return c.current[name]
-}
-
 // Get returns the configuration for a section
 func Get(name string) (interface{}, bool) {
 	return globalConfig.Get(name)
 }
 
-// MustGet returns the configuration for a section.
+// MustGet returns the configuration for the specified section. If the section does not exist, something will panic.
+func (c *Config) MustGet(name string) interface{} {
+	return c.current[name]
+}
+
+// MustGet returns the configuration for the specified section from the default configuration. If the section does not exist, something will panic.
 func MustGet(name string) interface{} {
 	return globalConfig.MustGet(name)
 }

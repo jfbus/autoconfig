@@ -8,11 +8,12 @@ type Loader struct {
 	filename string
 }
 
-// New creates a loader for ini files
+// New creates a Loader for INI files
 func New(filename string) *Loader {
 	return &Loader{filename: filename}
 }
 
+// Load loads the config file and unmarshals it to cfg
 func (l *Loader) Load(cfg map[string]interface{}) error {
 	f, err := ini.Load(l.filename)
 	if err != nil {
