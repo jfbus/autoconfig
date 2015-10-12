@@ -1,5 +1,6 @@
 # config
-Autonomous configuration for package - initial config + hot reload
+
+Autonomous configuration for golang packages with hot reload on signals
 
 ## Usage
 
@@ -20,7 +21,7 @@ func (c *PkgConf) Changed() {
 }
 
 var (
-	pkfCong PkgConf{
+	pkfCong = PkgConf{
 		Value: "default value",
 	}
 	_ = config.Register("section name", &pkgConf)
@@ -56,20 +57,31 @@ func (c *PkgClass) Reconfigure(c interface{}) {
 }
 ```
 
-## Config file format
+## Config file formats
 
 Any config file format can be used, provided :
 
+* the corresponding library is able to unmarshal configs to `map[string]interface{}` (map of strings of pointers to structs).
 * a loader class implementing the `Logger` interface is provided
 ```go
 type Loader interface {
 	Load(map[string]interface{}) error
 }
 ```
-* the corresponding library is able to unmarshal configs to `map[string]interface{}` where `interface{}` is a pointer to config structs.
 
 Currently, loaders are available for :
 * INI files (using https://github.com/go-ini/ini)
+
+## Caveats
+
+* Only a single file per config is supported,
+* Slice values are currently not supported.
+
+## Todo
+
+* Slice support
+* GoDoc
+* Tests
 
 ## License
 
