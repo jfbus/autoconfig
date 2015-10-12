@@ -88,6 +88,9 @@ func Register(name string, s interface{}) bool {
 
 func (c *Config) Reconfigure(name string, r Reconfigurable) bool {
 	c.register(name, nil, r)
+	if cfg, ok := c.Get(name); ok {
+		r.Reconfigure(cfg)
+	}
 	return true
 }
 
