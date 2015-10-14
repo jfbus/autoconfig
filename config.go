@@ -136,7 +136,7 @@ func New(l Loader) *Config {
 	return &Config{sections: map[string]*section{}, current: map[string]interface{}{}, loader: l}
 }
 
-// Load loads the config by callong the Load() function of the loader.
+// Load loads the config by calling the Load() function of the loader.
 func (c *Config) Load() error {
 	return c.load()
 }
