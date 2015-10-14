@@ -1,5 +1,5 @@
 /*
-Package config allows packages to be configured autonomously and reconfigured automatically.
+Package autoconfig allows packages to be configured autonomously and reconfigured automatically.
 
 Each package has its own configuration, neither main() nor any other part of your application has the knowledge of the package configuration.
 Config can be dynamically updated when the application receives a signal.
@@ -8,8 +8,8 @@ Usage
 
 Init :
 
-	config.Load(ini.New(cfgfile))
-	config.ReloadOn(syscall.SIGHUP)
+	autoconfig.Load(ini.New(cfgfile))
+	autoconfig.ReloadOn(syscall.SIGHUP)
 
 Sample config file :
 
@@ -34,7 +34,7 @@ Package config :
 		pkfCong = PkgConf{
 			Value: "default value",
 		}
-		_ = config.Register("section_name", &pkgConf)
+		_ = autoconfig.Register("section_name", &pkgConf)
 	)
 
 Instance config :
@@ -47,7 +47,7 @@ Instance config :
 
 	var (
 		// Set defaults
-		_ = config.Register("section_name", &PkgConf{
+		_ = autoconfig.Register("section_name", &PkgConf{
 			Value: "default value",
 		})
 	)
@@ -57,7 +57,7 @@ Instance config :
 	func New() *PkgClass {
 		n := &PkgClass{}
 		// This will trigger a n.Reconfigure() call with the current config
-		config.Reconfigure("section_name", n)
+		autoconfig.Reconfigure("section_name", n)
 		return n
 	}
 
@@ -67,7 +67,7 @@ Instance config :
 		}
 	}
 
-config will cleanly Lock/Unlock your structs provided they implement sync.Locker
+autoconfig will cleanly Lock/Unlock your structs provided they implement sync.Locker
 
 Config file formats
 
@@ -86,7 +86,7 @@ Currently, loaders are available for :
 * INI files (using https://github.com/go-ini/ini)
 
 */
-package config
+package autoconfig
 
 import (
 	"encoding/json"

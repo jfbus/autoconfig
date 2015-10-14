@@ -1,5 +1,5 @@
 // Package ini defines a loader for ini config files
-// 	config.Load(ini.New(filename))
+// 	autoconfig.Load(ini.New(filename))
 package ini
 
 import "gopkg.in/ini.v1"

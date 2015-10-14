@@ -1,4 +1,4 @@
-# config  [![](https://godoc.org/github.com/jfbus/config?status.svg)](http://godoc.org/github.com/jfbus/config)
+# autoconfig  [![](https://godoc.org/github.com/jfbus/autoconfig?status.svg)](http://godoc.org/github.com/jfbus/autoconfig)
 
 Autonomous configuration for golang packages with hot reload.
 
@@ -10,8 +10,8 @@ Autonomous configuration for golang packages with hot reload.
 Init :
 
 ```go
-config.Load(ini.New(cfgfile))
-config.ReloadOn(syscall.SIGHUP)
+autoconfig.Load(ini.New(cfgfile))
+autoconfig.ReloadOn(syscall.SIGHUP)
 ```
 
 Sample config file:
@@ -38,7 +38,7 @@ var (
 	pkfCong = PkgConf{
 		Value: "default value",
 	}
-	_ = config.Register("section_name", &pkgConf)
+	_ = autoconfig.Register("section_name", &pkgConf)
 )
 ```
 
@@ -53,7 +53,7 @@ type PkgConf struct {
 
 var (
 	// Set defaults
-	_ = config.Register("section_name", &PkgConf{
+	_ = autoconfig.Register("section_name", &PkgConf{
 		Value: "default value",
 	})
 )
@@ -63,7 +63,7 @@ type PkgClass struct {}
 func New() *PkgClass {
 	n := &PkgClass{}
 	// This will trigger a n.Reconfigure() call with the current config
-	config.Reconfigure("section_name", n)
+	autoconfig.Reconfigure("section_name", n)
 	return n
 }
 
