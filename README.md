@@ -74,7 +74,7 @@ func (c *PkgClass) Reconfigure(c interface{}) {
 }
 ```
 
-_config will cleanly Lock/Unlock your structs provided they implement `sync.Locker`_
+_autoconfig will cleanly Lock/Unlock your structs provided they implement `sync.Locker`_
 
 ## Config file formats
 
