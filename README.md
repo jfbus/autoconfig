@@ -1,4 +1,4 @@
-# config
+# config  [![](https://godoc.org/github.com/jfbus/config?status.svg)](http://godoc.org/github.com/jfbus/config)
 
 Autonomous configuration for golang packages with hot reload.
 
@@ -7,9 +7,18 @@ Autonomous configuration for golang packages with hot reload.
 
 ## Usage
 
+Init :
+
 ```go
 config.Load(ini.New(cfgfile))
 config.ReloadOn(syscall.SIGHUP)
+```
+
+Sample config file:
+
+```ini
+[section_name]
+value=foobar
 ```
 
 Package config :
@@ -67,19 +76,12 @@ func (c *PkgClass) Reconfigure(c interface{}) {
 
 _config will cleanly Lock/Unlock your structs provided they implement `sync.Locker`_
 
-Config file:
-
-```ini
-[section_name]
-value=foobar
-```
-
 ## Config file formats
 
 Any config file format can be used, provided :
 
 * the corresponding library is able to unmarshal configs to `map[string]interface{}` (map of strings of pointers to structs).
-* a loader class implementing the `Logger` interface is provided
+* a loader class implementing the `Loader` interface is provided
 ```go
 type Loader interface {
 	Load(map[string]interface{}) error
@@ -97,7 +99,6 @@ Currently, loaders are available for :
 ## Todo
 
 * Slice support
-* GoDoc
 * Tests
 
 ## License

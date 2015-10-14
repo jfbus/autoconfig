@@ -1,3 +1,91 @@
+/*
+Package config allows packages to be configured autonomously and reconfigured automatically.
+
+Each package has its own configuration, neither main() nor any other part of your application has the knowledge of the package configuration.
+Config can be dynamically updated when the application receives a signal.
+
+Usage
+
+Init :
+
+	config.Load(ini.New(cfgfile))
+	config.ReloadOn(syscall.SIGHUP)
+
+Sample config file :
+
+	[section_name]
+	value=foobar
+
+
+
+Package config :
+
+	package mypackage
+
+	type PkgConf struct {
+		Value string `ini:"value"`
+	}
+
+	func (c *PkgConf) Changed() {
+		// Do something
+	}
+
+	var (
+		pkfCong = PkgConf{
+			Value: "default value",
+		}
+		_ = config.Register("section_name", &pkgConf)
+	)
+
+Instance config :
+
+	package mypackage
+
+	type PkgConf struct {
+		Value string `ini:"value"`
+	}
+
+	var (
+		// Set defaults
+		_ = config.Register("section_name", &PkgConf{
+			Value: "default value",
+		})
+	)
+
+	type PkgClass struct {}
+
+	func New() *PkgClass {
+		n := &PkgClass{}
+		// This will trigger a n.Reconfigure() call with the current config
+		config.Reconfigure("section_name", n)
+		return n
+	}
+
+	func (c *PkgClass) Reconfigure(c interface{}) {
+		if cfg, ok := c.(*PkgConf); ok {
+			// Do something
+		}
+	}
+
+config will cleanly Lock/Unlock your structs provided they implement sync.Locker
+
+Config file formats
+
+Any config file format can be used, provided :
+
+* the corresponding library is able to unmarshal configs to map[string]interface{} (map of strings of pointers to structs).
+
+* a loader class implementing the Loader interface is provided
+
+	type Loader interface {
+		Load(map[string]interface{}) error
+	}
+
+Currently, loaders are available for :
+
+* INI files (using https://github.com/go-ini/ini)
+
+*/
 package config
 
 import (
@@ -16,6 +104,7 @@ type section struct {
 	onchange  []Reconfigurable
 }
 
+// Config defines a config
 type Config struct {
 	filename string
 	sections map[string]*section
@@ -23,41 +112,52 @@ type Config struct {
 	loader   Loader
 }
 
+// UpdateableConfig defines the interface a config will need to implement
+// in order to be notified of changes.
 type UpdatableConfig interface {
 	Changed()
 }
 
+// Reconfigurable defines the interface an object will need to implement
+// in order to be notified of changes.
 type Reconfigurable interface {
 	Reconfigure(interface{})
 }
 
+// Loader defines the interface a config file loader will need to implement.
 type Loader interface {
 	Load(map[string]interface{}) error
 }
 
 var globalConfig = Config{sections: map[string]*section{}, current: map[string]interface{}{}}
 
+// New defines a config, based on a loader.
 func New(l Loader) *Config {
 	return &Config{sections: map[string]*section{}, current: map[string]interface{}{}, loader: l}
 }
 
+// Load loads the config by callong the Load() function of the loader.
 func (c *Config) Load() error {
 	return c.load()
 }
 
+// Load loads the default config
 func Load(l Loader) error {
 	globalConfig.loader = l
 	return globalConfig.Load()
 }
 
+// Reload reloads a config
 func (c *Config) Reload() error {
 	return globalConfig.Load()
 }
 
+// Reload reloads the default config
 func Reload() error {
 	return globalConfig.Reload()
 }
 
+// ReloadOn defines signal to monitor. On reception of a signal, the config will be reloaded.
 func (c *Config) ReloadOn(signals ...os.Signal) {
 	go func() {
 		ch := make(chan os.Signal, 1)
@@ -68,10 +168,13 @@ func (c *Config) ReloadOn(signals ...os.Signal) {
 	}()
 }
 
+// ReloadOn defines signal to monitor. On reception of a signal, the default config will be reloaded.
 func ReloadOn(signals ...os.Signal) {
 	globalConfig.ReloadOn(signals...)
 }
 
+// Register registers a config structure for a config file section. The values passed will be used as
+// defaults in the future.
 func (c *Config) Register(name string, s interface{}) bool {
 	if uc, ok := s.(UpdatableConfig); ok {
 		c.register(name, s, &reconfigurableCfg{uc})
@@ -81,10 +184,13 @@ func (c *Config) Register(name string, s interface{}) bool {
 	return true
 }
 
+// Register registers a config structure for a config file section. The values passed will be used as
+// defaults in the future.
 func Register(name string, s interface{}) bool {
 	return globalConfig.Register(name, s)
 }
 
+// Register registers an instance to be reconfigured when a section config changes.
 func (c *Config) Reconfigure(name string, r Reconfigurable) bool {
 	c.register(name, nil, r)
 	if cfg, ok := c.Get(name); ok {
@@ -93,23 +199,28 @@ func (c *Config) Reconfigure(name string, r Reconfigurable) bool {
 	return true
 }
 
+// Register registers an instance to be reconfigured when a section config changes.
 func Reconfigure(name string, r Reconfigurable) bool {
 	return globalConfig.Reconfigure(name, r)
 }
 
+// Get returns the configuration for a section
 func (c *Config) Get(name string) (interface{}, bool) {
 	cfg, ok := c.current[name]
 	return cfg, ok
 }
 
+// MustGet returns the configuration for a section.
 func (c *Config) MustGet(name string) interface{} {
 	return c.current[name]
 }
 
+// Get returns the configuration for a section
 func Get(name string) (interface{}, bool) {
 	return globalConfig.Get(name)
 }
 
+// MustGet returns the configuration for a section.
 func MustGet(name string) interface{} {
 	return globalConfig.MustGet(name)
 }
