@@ -1,4 +1,4 @@
-# autoconfig  [![](https://godoc.org/github.com/jfbus/autoconfig?status.svg)](http://godoc.org/github.com/jfbus/autoconfig)
+# autoconfig  [![Build Status](https://travis-ci.org/jfbus/sqlbind.svg)](https://travis-ci.org/jfbus/sqlbind) [![](https://godoc.org/github.com/jfbus/autoconfig?status.svg)](http://godoc.org/github.com/jfbus/autoconfig)
 
 Autonomous configuration for golang packages with hot reload.
 
@@ -99,7 +99,6 @@ Currently, loaders are available for :
 ## Todo
 
 * Slice support
-* Tests
 
 ## License
 
