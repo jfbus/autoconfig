@@ -90,6 +90,7 @@ package autoconfig
 
 import (
 	"encoding/json"
+	"errors"
 	"log"
 	"os"
 	"os/signal"
@@ -131,7 +132,11 @@ type Loader interface {
 	Load(map[string]interface{}) error
 }
 
-var globalConfig = Config{sections: map[string]*section{}, current: map[string]interface{}{}}
+var (
+	globalConfig = Config{sections: map[string]*section{}, current: map[string]interface{}{}}
+
+	ErrNoLoader = errors.New("No loader was defined")
+)
 
 // New defines a config, based on a loader.
 func New(l Loader) *Config {
@@ -151,7 +156,7 @@ func Load(l Loader) error {
 
 // Reload reloads the config file
 func (c *Config) Reload() error {
-	return globalConfig.Load()
+	return c.Load()
 }
 
 // Reload reloads the config file for the default config
@@ -282,6 +287,9 @@ func (c *Config) register(name string, defaults interface{}, r Reconfigurable) {
 }
 
 func (c *Config) load() error {
+	if c.loader == nil {
+		return ErrNoLoader
+	}
 	for _, section := range c.sections {
 		if l, ok := section.current.(sync.Locker); ok {
 			l.Lock()
@@ -313,6 +321,9 @@ func addDefaults(to, from reflect.Value) {
 	from = reflect.Indirect(from)
 	for i := 0; i < to.NumField(); i++ {
 		f := to.Field(i)
+		if to.Type().Field(i).PkgPath != "" {
+			continue
+		}
 		if reflect.DeepEqual(f.Interface(), reflect.Zero(f.Type()).Interface()) {
 			if !f.CanSet() {
 				log.Printf("Config: Cannot set default value for field %s of %s", f.Type().Field(i).Name, f.Type().Name())
