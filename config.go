@@ -169,7 +169,7 @@ func (c *Config) ReloadOn(signals ...os.Signal) {
 	go func() {
 		ch := make(chan os.Signal, 1)
 		signal.Notify(ch, signals...)
-		for range ch {
+		for _ = range ch {
 			c.Reload()
 		}
 	}()
