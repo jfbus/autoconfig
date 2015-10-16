@@ -50,7 +50,7 @@ func TestNoLoader(t *testing.T) {
 func TestLoadCfg(t *testing.T) {
 	f, err := ioutil.TempFile("/tmp/", "autoconfig_test_")
 	if err != nil {
-		t.Fail()
+		t.Fatal("Unable to create config temp file")
 	}
 	defer os.Remove(f.Name())
 	f.WriteString(iniCfgBefore)
@@ -70,7 +70,7 @@ func TestLoadCfg(t *testing.T) {
 func TestReloadCfg(t *testing.T) {
 	f, err := ioutil.TempFile("/tmp/", "autoconfig_test_")
 	if err != nil {
-		t.Fail()
+		t.Fatal("Unable to create config temp file")
 	}
 	defer os.Remove(f.Name())
 	f.WriteString(iniCfgBefore)
@@ -102,7 +102,7 @@ func TestReloadCfg(t *testing.T) {
 func TestReloadInstance(t *testing.T) {
 	f, err := ioutil.TempFile("/tmp/", "autoconfig_test_")
 	if err != nil {
-		t.Fail()
+		t.Fatal("Unable to create config temp file")
 	}
 	defer os.Remove(f.Name())
 	f.WriteString(iniCfgBefore)
