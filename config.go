@@ -16,8 +16,6 @@ Sample config file :
 	[section_name]
 	value=foobar
 
-
-
 Package config :
 
 	package mypackage
@@ -111,6 +109,7 @@ type Config struct {
 	sections map[string]*section
 	current  map[string]interface{}
 	loader   Loader
+	loaded   bool
 }
 
 // UpdatableConfig defines the interface updateable config need to implement.
@@ -145,6 +144,7 @@ func New(l Loader) *Config {
 
 // Load loads the config by calling the Load() function of the loader.
 func (c *Config) Load() error {
+	c.loaded = true
 	return c.load()
 }
 
@@ -189,6 +189,9 @@ func (c *Config) Register(name string, s interface{}) bool {
 		c.register(name, s, &reconfigurableCfg{uc})
 	} else {
 		c.register(name, s, nil)
+	}
+	if c.loaded {
+		c.Reload()
 	}
 	return true
 }
