@@ -2,7 +2,7 @@
 
 Autonomous configuration for golang packages with hot reload.
 
-* Each package has its own configuration, neither `main()` nor any other part of your application has the knowledge of the package configuration. 
+* Each package has its own configuration section in a global config file, neither `main()` nor any other part of your application has the knowledge of the package configuration. 
 * Config can be dynamically updated when the application receives a signal.
 
 Supported file format are :
@@ -19,12 +19,16 @@ autoconfig.Load(yaml.New(cfgfile))
 autoconfig.ReloadOn(syscall.SIGHUP)
 ```
 
-Sample config file:
+Sample config file :
 
 ```yaml
+[...]
+
 section_name:
   group:
     value: foobar
+
+[...]
 ```
 
 Package config :
@@ -96,12 +100,18 @@ autoconfig.Load(ini.New(cfgfile))
 autoconfig.ReloadOn(syscall.SIGHUP)
 ```
 
-Package config :
+Sample config file :
 
 ```ini
+[...]
+
 [section_name]
 value=foobar
+
+[...]
 ```
+
+Package config :
 
 ```go
 package mypackage
@@ -130,8 +140,8 @@ type Loader interface {
 
 ## Caveats
 
-* Only a single file is loaded,
-* Values types are supported only if the underlying format supports them. INI does not support slices.
+* Only a single config file is supported,
+* Values types are supported only if the underlying format supports them (e.g. INI does not support slices).
 
 ## TODO
 

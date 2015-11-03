@@ -1,7 +1,7 @@
 /*
 Package autoconfig allows packages to be configured autonomously and reconfigured automatically.
 
-Each package has its own configuration, neither main() nor any other part of your application has the knowledge of the package configuration.
+Each package has its own configuration section in a global config file, neither main() nor any other part of your application has the knowledge of the package configuration.
 Config can be dynamically updated when the application receives a signal.
 
 
