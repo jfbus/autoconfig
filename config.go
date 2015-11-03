@@ -5,10 +5,7 @@ Each package has its own configuration, neither main() nor any other part of you
 Config can be dynamically updated when the application receives a signal.
 
 
-Supported file format are :
-
-* INI (using https://github.com/go-ini/ini)
-* YAML (using https://gopkg.in/yaml.v2)
+Supported file format are INI (using https://github.com/go-ini/ini) and YAML (using https://gopkg.in/yaml.v2).
 
 Usage - YAML
 
@@ -17,11 +14,11 @@ Init :
 	autoconfig.Load(yaml.New(cfgfile))
 	autoconfig.ReloadOn(syscall.SIGHUP)
 
-Sample config file:
+Sample config file :
 
 	section_name:
-	  group:
-    	value: foobar
+		group:
+    		value: foobar
 
 Package config :
 
@@ -86,7 +83,7 @@ Init :
 	autoconfig.Load(ini.New(cfgfile))
 	autoconfig.ReloadOn(syscall.SIGHUP)
 
-Sample config file:
+Sample config file :
 
 	[section_name]
 	value=foobar
@@ -117,9 +114,9 @@ Any config file format can be used, provided a loader class implementing the `Lo
 
 Caveats
 
-* Only a single file is loaded,
+* Only a single config file is supported,
 
-* Values types are supported only if the underlying format supports them. INI does not support slices.
+* Values types are supported only if the underlying format supports them (e.g. INI does not support slices).
 
 */
 package autoconfig
