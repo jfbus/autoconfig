@@ -133,7 +133,7 @@ type testCase struct {
 	raw         string
 	rawUpdated  string
 	loader      testLoaderInterface
-	defaults    changeCounter
+	defaults    func() changeCounter
 	afterLoad   changeCounter
 	afterUpdate changeCounter
 }
@@ -154,7 +154,7 @@ key=bar
 			raw:         iniRaw,
 			rawUpdated:  iniRawUpdated,
 			loader:      &iniLoader{},
-			defaults:    &testCfg{None: "foobar"},
+			defaults:    func() changeCounter { return &testCfg{None: "foobar"} },
 			afterLoad:   &testCfg{Key: "foo", None: "foobar", changed: 1},
 			afterUpdate: &testCfg{Key: "bar", None: "foobar", changed: 2},
 		},
@@ -167,7 +167,7 @@ key=bar
   key: bar
 `,
 			loader:      &yamlLoader{},
-			defaults:    &testCfg{None: "foobar"},
+			defaults:    func() changeCounter { return &testCfg{None: "foobar"} },
 			afterLoad:   &testCfg{Key: "foo", None: "foobar", changed: 1},
 			afterUpdate: &testCfg{Key: "bar", None: "foobar", changed: 2},
 		},
@@ -182,7 +182,7 @@ key=bar
     key: bar
 `,
 			loader:      &yamlLoader{},
-			defaults:    &testDeepCfg{None: "foobar"},
+			defaults:    func() changeCounter { return &testDeepCfg{None: "foobar"} },
 			afterLoad:   &testDeepCfg{Deeper: Deeper{Key: "foo"}, None: "foobar", changed: 1},
 			afterUpdate: &testDeepCfg{Deeper: Deeper{Key: "bar"}, None: "foobar", changed: 2},
 		},
@@ -196,7 +196,7 @@ func TestReloadCfg(t *testing.T) {
 			t.Fatal("Unable to create config temp file")
 		}
 		cfg := New(l)
-		scfg := tc.defaults
+		scfg := tc.defaults()
 		cfg.Register("section", scfg)
 		err = cfg.Load()
 		if err != nil {
@@ -215,6 +215,74 @@ func TestReloadCfg(t *testing.T) {
 		}
 		tc.loader.clean()
 	}
+}
+
+func TestAfterLoadCfg(t *testing.T) {
+	for _, tc := range testCases {
+		l, err := tc.loader.loader(tc.raw)
+		if err != nil {
+			t.Fatal("Unable to create config temp file")
+		}
+		cfg := New(l)
+		scfg := tc.defaults()
+		err = cfg.Load()
+		if err != nil {
+			t.Errorf("When loading %s conf, Load() returned %s", tc.name, err)
+		}
+		cfg.Register("section", scfg)
+		if !reflect.DeepEqual(scfg, tc.afterLoad) {
+			t.Errorf("When loading %s conf, expected <%+v>, got <%+v>", tc.name, tc.afterLoad, scfg)
+		}
+		tc.loader.clean()
+	}
+}
+
+func TestReloadInstance(t *testing.T) {
+	tc := testCases[0]
+	l, err := tc.loader.loader(tc.raw)
+	if err != nil {
+		t.Fatal("Unable to create config temp file")
+	}
+	cfg := New(l)
+	cfg.Register("section", tc.defaults())
+	i := &testClass{}
+	cfg.Reconfigure("section", i)
+	err = cfg.Load()
+	if err != nil {
+		t.Errorf("When loading %s conf, Load() returned %s", tc.name, err)
+	}
+	if !reflect.DeepEqual(i.cfg, tc.afterLoad) {
+		t.Errorf("When loading %s conf, expected <%+v>, got <%+v>", tc.name, tc.afterLoad, i.cfg)
+	}
+	tc.loader.update(tc.rawUpdated)
+	err = cfg.Reload()
+	if err != nil {
+		t.Errorf("When loading %s conf, Reload() returned %s", tc.name, err)
+	}
+	if !reflect.DeepEqual(i.cfg, tc.afterUpdate) {
+		t.Errorf("When reloading %s conf, expected <%+v>, got <%+v>", tc.name, tc.afterUpdate, i.cfg)
+	}
+	tc.loader.clean()
+}
+
+func TestAfterLoadInstance(t *testing.T) {
+	tc := testCases[0]
+	l, err := tc.loader.loader(tc.raw)
+	if err != nil {
+		t.Fatal("Unable to create config temp file")
+	}
+	cfg := New(l)
+	err = cfg.Load()
+	cfg.Register("section", tc.defaults())
+	i := &testClass{}
+	cfg.Reconfigure("section", i)
+	if err != nil {
+		t.Errorf("When loading %s conf, Load() returned %s", tc.name, err)
+	}
+	if !reflect.DeepEqual(i.cfg, tc.afterLoad) {
+		t.Errorf("When loading %s conf, expected <%+v>, got <%+v>", tc.name, tc.afterLoad, i.cfg)
+	}
+	tc.loader.clean()
 }
 
 func TestNoLoader(t *testing.T) {
