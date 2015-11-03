@@ -4,24 +4,35 @@ Package autoconfig allows packages to be configured autonomously and reconfigure
 Each package has its own configuration, neither main() nor any other part of your application has the knowledge of the package configuration.
 Config can be dynamically updated when the application receives a signal.
 
-Usage
+
+Supported file format are :
+
+* INI (using https://github.com/go-ini/ini)
+* YAML (using https://gopkg.in/yaml.v2)
+
+Usage - YAML
 
 Init :
 
-	autoconfig.Load(ini.New(cfgfile))
+	autoconfig.Load(yaml.New(cfgfile))
 	autoconfig.ReloadOn(syscall.SIGHUP)
 
-Sample config file :
+Sample config file:
 
-	[section_name]
-	value=foobar
+	section_name:
+	  group:
+    	value: foobar
 
 Package config :
 
 	package mypackage
 
+	type GroupConfig struct {
+		Value `yaml:"value"`
+	}
+
 	type PkgConf struct {
-		Value string `ini:"value"`
+		Group GroupConfig `yaml:"group"`
 	}
 
 	func (c *PkgConf) Changed() {
@@ -30,7 +41,9 @@ Package config :
 
 	var (
 		pkfCong = PkgConf{
-			Value: "default value",
+			Group: Group{
+				Value: "default value",
+			},
 		}
 		_ = autoconfig.Register("section_name", &pkgConf)
 	)
@@ -39,14 +52,12 @@ Instance config :
 
 	package mypackage
 
-	type PkgConf struct {
-		Value string `ini:"value"`
-	}
-
 	var (
 		// Set defaults
 		_ = autoconfig.Register("section_name", &PkgConf{
-			Value: "default value",
+			Group: Group{
+				Value: "default value",
+			},
 		})
 	)
 
@@ -67,21 +78,48 @@ Instance config :
 
 autoconfig will cleanly Lock/Unlock your structs provided they implement sync.Locker
 
-Config file formats
 
-Any config file format can be used, provided :
+Usage - INI
 
-* the corresponding library is able to unmarshal configs to map[string]interface{} (map of strings of pointers to structs).
+Init :
 
-* a loader class implementing the Loader interface is provided
+	autoconfig.Load(ini.New(cfgfile))
+	autoconfig.ReloadOn(syscall.SIGHUP)
+
+Sample config file:
+
+	[section_name]
+	value=foobar
+
+Package config :
+
+	package mypackage
+
+	type PkgConf struct {
+		Value string `ini:"value"`
+	}
+
+	var (
+		pkfCong = PkgConf{
+			Value: "default value",
+		}
+		_ = autoconfig.Register("section_name", &pkgConf)
+	)
+
+
+Other file formats
+
+Any config file format can be used, provided a loader class implementing the `Loader` interface is provided :
 
 	type Loader interface {
 		Load(map[string]interface{}) error
 	}
 
-Currently, loaders are available for :
+Caveats
 
-* INI files (using https://github.com/go-ini/ini)
+* Only a single file is loaded,
+
+* Values types are supported only if the underlying format supports them. INI does not support slices.
 
 */
 package autoconfig

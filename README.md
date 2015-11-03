@@ -130,10 +130,10 @@ type Loader interface {
 
 ## Caveats
 
-* Only a single file per config is supported,
-* Values are supported only if the underlying format supports them. INI does not support slices.
+* Only a single file is loaded,
+* Values types are supported only if the underlying format supports them. INI does not support slices.
 
-## Todo
+## TODO
 
 * Multiple files
 
