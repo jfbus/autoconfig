@@ -1,5 +1,5 @@
 // Package yaml defines a loader for yaml config files
-// 	autoconfig.Load(ini.New(filename))
+// 	autoconfig.Load(yaml.New(filename))
 package yaml
 
 import (
@@ -12,7 +12,7 @@ type Loader struct {
 	filename string
 }
 
-// New creates a Loader for INI files
+// New creates a Loader for YAML files
 func New(filename string) *Loader {
 	return &Loader{filename: filename}
 }
