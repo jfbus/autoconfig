@@ -18,7 +18,7 @@ Sample config file :
 
 	section_name:
 		group:
-    		value: foobar
+			value: foobar
 
 Package config :
 
