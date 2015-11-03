@@ -184,6 +184,7 @@ func ReloadOn(signals ...os.Signal) {
 // defaults in the future.
 // Defaults will be remembered : if a variable is defined, and then unset, it will be reset to the default value.
 // If s implements UpdateableConfig, s.Changed() will be called when the config is reloaded and has changed.
+// If config has been previously loaded, s.Changed() will be called immediatly.
 func (c *Config) Register(name string, s interface{}) bool {
 	if uc, ok := s.(UpdatableConfig); ok {
 		c.register(name, s, &reconfigurableCfg{uc})
@@ -209,10 +210,14 @@ func Register(name string, s interface{}) bool {
 }
 
 // Reconfigure registers an instance. The config section must have been registered before using Register
+// r.Reconfigure() will be called when config is reloaded and has changed.
+// If config has been previously loaded, r.Reconfigure() will be called immediatly.
 func (c *Config) Reconfigure(name string, r Reconfigurable) bool {
 	c.register(name, nil, r)
-	if cfg, ok := c.Get(name); ok {
-		r.Reconfigure(cfg)
+	if c.loaded {
+		if cfg, ok := c.Get(name); ok {
+			r.Reconfigure(cfg)
+		}
 	}
 	return true
 }
