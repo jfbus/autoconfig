@@ -2,7 +2,7 @@
 
 Autonomous configuration for golang packages with hot reload.
 
-* Each package has its own configuration section in a global config file, neither `main()` nor any other part of your application has the knowledge of the package configuration. 
+* Each package has its own configuration section in a single global config file, neither `main()` nor any other part of your application has the knowledge of the package configuration. 
 * Config can be dynamically updated when the application receives a signal.
 
 Supported file format are :
@@ -50,7 +50,7 @@ func (c *PkgConf) Changed() {
 
 var (
 	pkfCong = PkgConf{
-		Group: Group{
+		Group: GroupConfig{
 			Value: "default value",
 		},
 	}
@@ -66,7 +66,7 @@ package mypackage
 var (
 	// Set defaults
 	_ = autoconfig.Register("section_name", &PkgConf{
-		Group: Group{
+		Group: GroupConfig{
 			Value: "default value",
 		},
 	})

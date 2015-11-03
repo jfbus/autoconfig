@@ -38,7 +38,7 @@ Package config :
 
 	var (
 		pkfCong = PkgConf{
-			Group: Group{
+			Group: GroupConfig{
 				Value: "default value",
 			},
 		}
@@ -52,7 +52,7 @@ Instance config :
 	var (
 		// Set defaults
 		_ = autoconfig.Register("section_name", &PkgConf{
-			Group: Group{
+			Group: GroupConfig{
 				Value: "default value",
 			},
 		})
