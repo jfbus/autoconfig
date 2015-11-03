@@ -94,11 +94,11 @@ Currently, loaders are available for :
 ## Caveats
 
 * Only a single file per config is supported,
-* Slice values are currently not supported.
+* Values are supported only if the underlying format supports them. INI does not support slices.
 
 ## Todo
 
-* Slice support
+* Multiple files
 
 ## License
 
