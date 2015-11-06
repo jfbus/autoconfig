@@ -387,7 +387,15 @@ func docopy(to, from reflect.Value) {
 			for i := 0; i < to.NumField(); i++ {
 				docopy(to.Field(i), from.Field(i))
 			}
-		// TODO : case reflect.Slice:
+		case reflect.Slice:
+			if to.Cap() > from.Len() {
+				to.SetLen(from.Len())
+			} else {
+				to.Set(reflect.MakeSlice(to.Type(), from.Len(), from.Len()))
+			}
+			for i := 0; i < from.Len(); i++ {
+				to.Index(i).Set(from.Index(i))
+			}
 		default:
 			to.Set(from)
 		}

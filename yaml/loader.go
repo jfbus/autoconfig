@@ -31,6 +31,9 @@ func (l *Loader) Load(cfg map[string]interface{}) error {
 	}
 	for name, scfg := range cfg {
 		if syam, ok := tmp[name]; ok {
+			if syam == nil {
+				continue
+			}
 			buf, err := yaml.Marshal(syam)
 			if err != nil {
 				return err

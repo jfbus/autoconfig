@@ -42,6 +42,19 @@ func (t *testDeepCfg) changeCount() int {
 	return t.changed
 }
 
+type testSliceCfg struct {
+	Key     []string `yaml:"key"`
+	changed int
+}
+
+func (t *testSliceCfg) Changed() {
+	t.changed++
+}
+
+func (t *testSliceCfg) changeCount() int {
+	return t.changed
+}
+
 type testClass struct {
 	cfg     *testCfg
 	changed int
@@ -186,6 +199,43 @@ key=bar
 			afterLoad:   &testDeepCfg{Deeper: Deeper{Key: "foo"}, None: "foobar", changed: 1},
 			afterUpdate: &testDeepCfg{Deeper: Deeper{Key: "bar"}, None: "foobar", changed: 2},
 		},
+		testCase{
+			name: "yaml slice no defaults",
+			raw: `section:
+  key: ["foo"]
+`,
+			rawUpdated: `section:
+  key: ["foo", "bar"]
+`,
+			loader:      &yamlLoader{},
+			defaults:    func() changeCounter { return &testSliceCfg{} },
+			afterLoad:   &testSliceCfg{Key: []string{"foo"}, changed: 1},
+			afterUpdate: &testSliceCfg{Key: []string{"foo", "bar"}, changed: 2},
+		},
+		testCase{
+			name: "yaml slice defaults",
+			raw: `section:
+`,
+			rawUpdated: `section:
+  key: ["foo", "bar"]
+`,
+			loader:      &yamlLoader{},
+			defaults:    func() changeCounter { return &testSliceCfg{Key: []string{"foo"}} },
+			afterLoad:   &testSliceCfg{Key: []string{"foo"}, changed: 1},
+			afterUpdate: &testSliceCfg{Key: []string{"foo", "bar"}, changed: 2},
+		},
+		testCase{
+			name: "yaml slice none",
+			raw: `section:
+`,
+			rawUpdated: `section:
+  key: ["foo", "bar"]
+`,
+			loader:      &yamlLoader{},
+			defaults:    func() changeCounter { return &testSliceCfg{} },
+			afterLoad:   &testSliceCfg{changed: 1},
+			afterUpdate: &testSliceCfg{Key: []string{"foo", "bar"}, changed: 2},
+		},
 	}
 )
 
@@ -203,7 +253,7 @@ func TestReloadCfg(t *testing.T) {
 			t.Errorf("When loading %s conf, Load() returned %s", tc.name, err)
 		}
 		if !reflect.DeepEqual(scfg, tc.afterLoad) {
-			t.Errorf("When loading %s conf, expected <%+v>, got <%+v>", tc.name, tc.afterLoad, scfg)
+			t.Errorf("When loading %s conf, expected <%#v>, got <%#v>", tc.name, tc.afterLoad, scfg)
 		}
 		tc.loader.update(tc.rawUpdated)
 		err = cfg.Reload()
@@ -211,7 +261,7 @@ func TestReloadCfg(t *testing.T) {
 			t.Errorf("When loading %s conf, Reload() returned %s", tc.name, err)
 		}
 		if !reflect.DeepEqual(scfg, tc.afterUpdate) {
-			t.Errorf("When reloading %s conf, expected <%+v>, got <%+v>", tc.name, tc.afterUpdate, scfg)
+			t.Errorf("When reloading %s conf, expected <%#v>, got <%#v>", tc.name, tc.afterUpdate, scfg)
 		}
 		tc.loader.clean()
 	}
@@ -231,7 +281,7 @@ func TestAfterLoadCfg(t *testing.T) {
 		}
 		cfg.Register("section", scfg)
 		if !reflect.DeepEqual(scfg, tc.afterLoad) {
-			t.Errorf("When loading %s conf, expected <%+v>, got <%+v>", tc.name, tc.afterLoad, scfg)
+			t.Errorf("When loading %s conf, expected <%#v>, got <%#v>", tc.name, tc.afterLoad, scfg)
 		}
 		tc.loader.clean()
 	}
@@ -252,7 +302,7 @@ func TestReloadInstance(t *testing.T) {
 		t.Errorf("When loading %s conf, Load() returned %s", tc.name, err)
 	}
 	if !reflect.DeepEqual(i.cfg, tc.afterLoad) {
-		t.Errorf("When loading %s conf, expected <%+v>, got <%+v>", tc.name, tc.afterLoad, i.cfg)
+		t.Errorf("When loading %s conf, expected <%#v>, got <%#v>", tc.name, tc.afterLoad, i.cfg)
 	}
 	tc.loader.update(tc.rawUpdated)
 	err = cfg.Reload()
@@ -260,7 +310,7 @@ func TestReloadInstance(t *testing.T) {
 		t.Errorf("When loading %s conf, Reload() returned %s", tc.name, err)
 	}
 	if !reflect.DeepEqual(i.cfg, tc.afterUpdate) {
-		t.Errorf("When reloading %s conf, expected <%+v>, got <%+v>", tc.name, tc.afterUpdate, i.cfg)
+		t.Errorf("When reloading %s conf, expected <%#v>, got <%#v>", tc.name, tc.afterUpdate, i.cfg)
 	}
 	tc.loader.clean()
 }
@@ -280,7 +330,7 @@ func TestAfterLoadInstance(t *testing.T) {
 		t.Errorf("When loading %s conf, Load() returned %s", tc.name, err)
 	}
 	if !reflect.DeepEqual(i.cfg, tc.afterLoad) {
-		t.Errorf("When loading %s conf, expected <%+v>, got <%+v>", tc.name, tc.afterLoad, i.cfg)
+		t.Errorf("When loading %s conf, expected <%#v>, got <%#v>", tc.name, tc.afterLoad, i.cfg)
 	}
 	tc.loader.clean()
 }
