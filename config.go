@@ -318,7 +318,14 @@ func (c *Config) register(name string, defaults interface{}, r Reconfigurable) {
 		}
 	}
 	if defaults != nil {
-		addDefaults(c.sections[name].defaults, v)
+		d := c.sections[name].defaults
+		switch d.Type().Kind() {
+		case reflect.Struct:
+			addStructDefaults(d, v)
+		case reflect.Map:
+			addMapDefaults(d, v)
+		default:
+		}
 		if c.sections[name].current == nil {
 			c.sections[name].current = defaults
 			c.current[name] = defaults
@@ -359,7 +366,16 @@ func (s *section) change() {
 	}
 }
 
-func addDefaults(to, from reflect.Value) {
+func addMapDefaults(to, from reflect.Value) {
+	to = reflect.Indirect(to)
+	from = reflect.Indirect(from)
+	for _, key := range from.MapKeys() {
+		f := to.MapIndex(key)
+		docopy(f, from.MapIndex(key))
+	}
+}
+
+func addStructDefaults(to, from reflect.Value) {
 	to = reflect.Indirect(to)
 	from = reflect.Indirect(from)
 	for i := 0; i < to.NumField(); i++ {

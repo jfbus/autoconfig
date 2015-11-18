@@ -55,6 +55,25 @@ func (t *testSliceCfg) changeCount() int {
 	return t.changed
 }
 
+type testCfgMap map[string]int
+
+func (t *testCfgMap) Changed() {
+	m := *t
+	if _, ok := m["changed"]; !ok {
+		m["changed"] = 0
+	}
+	m["changed"]++
+}
+
+func (t *testCfgMap) changeCount() int {
+	m := *t
+	if c, ok := m["changed"]; ok {
+		return c
+	} else {
+		return 0
+	}
+}
+
 type testClass struct {
 	cfg     *testCfg
 	changed int
@@ -235,6 +254,19 @@ key=bar
 			defaults:    func() changeCounter { return &testSliceCfg{} },
 			afterLoad:   &testSliceCfg{changed: 1},
 			afterUpdate: &testSliceCfg{Key: []string{"foo", "bar"}, changed: 2},
+		},
+		testCase{
+			name: "yaml map",
+			raw: `section:
+  key: 21
+`,
+			rawUpdated: `section:
+  key: 42
+`,
+			loader:      &yamlLoader{},
+			defaults:    func() changeCounter { return &testCfgMap{} },
+			afterLoad:   &testCfgMap{"key": 21, "changed": 1},
+			afterUpdate: &testCfgMap{"key": 42, "changed": 2},
 		},
 	}
 )
