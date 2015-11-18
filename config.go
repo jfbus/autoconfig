@@ -371,7 +371,13 @@ func addMapDefaults(to, from reflect.Value) {
 	from = reflect.Indirect(from)
 	for _, key := range from.MapKeys() {
 		f := to.MapIndex(key)
-		docopy(f, from.MapIndex(key))
+		if reflect.DeepEqual(f.Interface(), reflect.Zero(f.Type()).Interface()) {
+			if !f.CanSet() {
+				log.Printf("Config: Cannot set default value for key %s of %s", key, f.Type().Name())
+				continue
+			}
+			docopy(f, from.MapIndex(key))
+		}
 	}
 }
 
