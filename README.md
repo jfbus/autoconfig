@@ -2,7 +2,7 @@
 
 Autonomous configuration for golang packages with hot reload.
 
-* Each package has its own configuration section in a single global config file, neither `main()` nor any other part of your application has the knowledge of the package configuration. 
+* Each package has its own configuration section within a single global config file, neither `main()` nor any other part of your application has the knowledge of the package configuration.
 * Config can be dynamically updated when the application receives a signal.
 
 Supported file format are :
@@ -15,7 +15,7 @@ Supported file format are :
 Init :
 
 ```go
-autoconfig.Load(yaml.New(cfgfile))
+autoconfig.Load(yaml.New(filename))
 autoconfig.ReloadOn(syscall.SIGHUP)
 ```
 
@@ -45,10 +45,11 @@ type PkgConf struct {
 }
 
 func (c *PkgConf) Changed() {
-	// Do something
+	// Do something when config has changed
 }
 
 var (
+  // config, with default values
 	pkfCong = PkgConf{
 		Group: GroupConfig{
 			Value: "default value",
@@ -96,7 +97,7 @@ _autoconfig will cleanly Lock/Unlock your structs provided they implement `sync.
 Init :
 
 ```go
-autoconfig.Load(ini.New(cfgfile))
+autoconfig.Load(ini.New(filename))
 autoconfig.ReloadOn(syscall.SIGHUP)
 ```
 
