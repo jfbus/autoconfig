@@ -84,7 +84,7 @@ func New() *PkgClass {
 
 func (c *PkgClass) Reconfigure(c interface{}) {
 	if cfg, ok := c.(*PkgConf); ok {
-		// Do something
+		// Do something when config has changed
 	}
 }
 ```
